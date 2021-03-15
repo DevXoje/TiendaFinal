@@ -105,7 +105,7 @@ var EntityLocalData = /** @class */ (function () {
 }());
 var Producto = /** @class */ (function () {
     function Producto(descripcion, familia, precio, stock) {
-        this.id = ++Producto.cantidadProducto;
+        this.id = ++Producto.nextId;
         this.descripcion = descripcion;
         this.familia = familia;
         this.precio = precio;
@@ -113,7 +113,7 @@ var Producto = /** @class */ (function () {
     }
     Producto.prototype.saveId = function (producto) {
     };
-    Producto.cantidadProducto = 0;
+    Producto.nextId = 0;
     return Producto;
 }());
 var ProductoList = /** @class */ (function (_super) {
@@ -138,7 +138,7 @@ var ProductoList = /** @class */ (function (_super) {
             var idCelda = filaSelect.querySelector("td");
             var id = idCelda.textContent;
             producto.id = parseInt(id);
-            Producto.cantidadProducto = this.setMaxID(this.getData());
+            Producto.nextId = this.setMaxID(this.getData());
             ;
             this.removeFromID(id);
             this.form.classList.remove("select");
@@ -159,7 +159,7 @@ var ProductoList = /** @class */ (function (_super) {
     };
     ProductoList.prototype.printData = function () {
         var data = this.getData();
-        Producto.cantidadProducto = this.setMaxID(data);
+        Producto.nextId = this.setMaxID(data);
         for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
             var producto = data_3[_i];
             this.addRow(producto);

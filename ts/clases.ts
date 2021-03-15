@@ -96,7 +96,7 @@ abstract class EntityLocalData {
 }
 
 class Producto {
-	static cantidadProducto = 0;
+	static nextId = 0;
 	id: number;
 	stock: number;
 	precio: number;
@@ -106,7 +106,7 @@ class Producto {
 	constructor(descripcion: string, familia: string,
 		precio: number,
 		stock: number) {
-		this.id = ++Producto.cantidadProducto;
+		this.id = ++Producto.nextId;
 		this.descripcion = descripcion;
 		this.familia = familia;
 		this.precio = precio;
@@ -143,7 +143,7 @@ class ProductoList extends EntityLocalData {
 			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
 			const id = idCelda.textContent as string;
 			producto.id = parseInt(id);
-			Producto.cantidadProducto = this.setMaxID(this.getData());;
+			Producto.nextId = this.setMaxID(this.getData());;
 			this.removeFromID(id);
 			this.form.classList.remove("select");
 			filaSelect.classList.remove("select");
@@ -163,7 +163,7 @@ class ProductoList extends EntityLocalData {
 	}
 	printData() {
 		const data: Array<Producto> = this.getData();
-		Producto.cantidadProducto = this.setMaxID(data);
+		Producto.nextId = this.setMaxID(data);
 		for (const producto of data) {
 			this.addRow(producto)
 		}
