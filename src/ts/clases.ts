@@ -21,7 +21,7 @@ abstract class EntityLocalData {
 		var output = new Array();
 		var ajax = new XMLHttpRequest();
 		ajax.overrideMimeType("application/json");
-		ajax.open('GET', `../json/${this.nameFile}.json`, false);
+		ajax.open('GET', `./../../json/${this.nameFile}.json`, false);
 		ajax.onreadystatechange = () => {
 			if (ajax.readyState == 4 && ajax.status == 200) {
 				output = JSON.parse(ajax.responseText);
