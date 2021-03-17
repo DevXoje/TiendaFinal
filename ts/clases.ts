@@ -231,6 +231,7 @@ class ClienteList extends EntityLocalData {
 
 	constructor() {
 		super("clientes", "cliente");
+		this.setConfigEyePassword();
 	}
 	selectDataOfTable() {
 		const formData = new FormData(this.form);
@@ -279,7 +280,7 @@ class ClienteList extends EntityLocalData {
 			this.addRowOnTable(cliente);
 		}
 	}
-	addRowOnTable(cliente: any) {
+	addRowOnTable(cliente: Cliente) {
 		let newRow;
 		const controls = this.getButtons();
 
@@ -289,10 +290,12 @@ class ClienteList extends EntityLocalData {
 		newRow = `
 		<tr>
 			<td scope="row">${cliente.id}</td>
-                <td>${cliente.precio}</td>
-                <td>${cliente.stock}</td>
-                <td>${cliente.familia}</td>
-                <td>${cliente.descripcion}</td>
+                <td>${cliente.nombre}</td>
+                <td>${cliente.apellidos}</td>
+                <td>${cliente.dni}</td>
+                <td>${cliente.fecha_nac}</td>
+                <td>${cliente.email}</td>
+                <td>${cliente.password}</td>
 				<td>${controls.btn_edit.outerHTML}</td>
 				<td>${controls.btn_remove.outerHTML}</td>
 		</tr>`;
@@ -302,6 +305,36 @@ class ClienteList extends EntityLocalData {
 		btn_edit.addEventListener("click", (e) => this.editData(e));
 		btn_remove.addEventListener("click", (e) => this.removeData(e));
 
+	}
+	setConfigEyePassword() {
+		const toggler = document.querySelector(".toggle-password") as HTMLSpanElement;
+		const eye = document.querySelector(".toggler") as HTMLElement;
+		const passwordContainer = document.querySelector("#pass_password") as HTMLInputElement;
+		toggler.onclick = (event: Event) => {
+			event.preventDefault();
+			//eye.classList.toggle("fa-eye fa-eye-slash");
+			if (passwordContainer.type == "password") {
+				passwordContainer.type = "text";
+				eye.classList.replace("fa-eye-slash", "fa-eye");
+			} else {
+				passwordContainer.type = "password";
+				eye.classList.replace("fa-eye", "fa-eye-slash");
+			}
+		}
+		/*$(document).ready(function() {
+	$("#show_hide_password a").on('click', function(event) {
+		event.preventDefault();
+		if($('#show_hide_password input').attr("type") == "text"){
+			$('#show_hide_password input').attr('type', 'password');
+			$('#show_hide_password i').addClass( "fa-eye-slash" );
+			$('#show_hide_password i').removeClass( "fa-eye" );
+		}else if($('#show_hide_password input').attr("type") == "password"){
+			$('#show_hide_password input').attr('type', 'text');
+			$('#show_hide_password i').removeClass( "fa-eye-slash" );
+			$('#show_hide_password i').addClass( "fa-eye" );
+		}
+	});
+});*/
 	}
 
 }

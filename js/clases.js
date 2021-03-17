@@ -204,7 +204,9 @@ var ProductoList = /** @class */ (function (_super) {
 var ClienteList = /** @class */ (function (_super) {
     __extends(ClienteList, _super);
     function ClienteList() {
-        return _super.call(this, "clientes", "cliente") || this;
+        var _this = _super.call(this, "clientes", "cliente") || this;
+        _this.setConfigEyePassword();
+        return _this;
     }
     ClienteList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
@@ -253,12 +255,43 @@ var ClienteList = /** @class */ (function (_super) {
         controls.btn_edit.id = "btn_edit_" + cliente.id;
         controls.btn_remove.id = "btn_remove_" + cliente.id;
         var bodyTable = this.table.querySelector("tbody");
-        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + cliente.id + "</td>\n                <td>" + cliente.precio + "</td>\n                <td>" + cliente.stock + "</td>\n                <td>" + cliente.familia + "</td>\n                <td>" + cliente.descripcion + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
+        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + cliente.id + "</td>\n                <td>" + cliente.nombre + "</td>\n                <td>" + cliente.apellidos + "</td>\n                <td>" + cliente.dni + "</td>\n                <td>" + cliente.fecha_nac + "</td>\n                <td>" + cliente.email + "</td>\n                <td>" + cliente.password + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
         bodyTable.innerHTML += newRow;
         var btn_edit = document.getElementById("btn_edit_" + cliente.id);
         var btn_remove = document.getElementById("btn_remove_" + cliente.id);
         btn_edit.addEventListener("click", function (e) { return _this.editData(e); });
         btn_remove.addEventListener("click", function (e) { return _this.removeData(e); });
+    };
+    ClienteList.prototype.setConfigEyePassword = function () {
+        var toggler = document.querySelector(".toggle-password");
+        var eye = document.querySelector(".toggler");
+        var passwordContainer = document.querySelector("#pass_password");
+        toggler.onclick = function (event) {
+            event.preventDefault();
+            //eye.classList.toggle("fa-eye fa-eye-slash");
+            if (passwordContainer.type == "password") {
+                passwordContainer.type = "text";
+                eye.classList.replace("fa-eye-slash", "fa-eye");
+            }
+            else {
+                passwordContainer.type = "password";
+                eye.classList.replace("fa-eye", "fa-eye-slash");
+            }
+        };
+        /*$(document).ready(function() {
+    $("#show_hide_password a").on('click', function(event) {
+        event.preventDefault();
+        if($('#show_hide_password input').attr("type") == "text"){
+            $('#show_hide_password input').attr('type', 'password');
+            $('#show_hide_password i').addClass( "fa-eye-slash" );
+            $('#show_hide_password i').removeClass( "fa-eye" );
+        }else if($('#show_hide_password input').attr("type") == "password"){
+            $('#show_hide_password input').attr('type', 'text');
+            $('#show_hide_password i').removeClass( "fa-eye-slash" );
+            $('#show_hide_password i').addClass( "fa-eye" );
+        }
+    });
+});*/
     };
     return ClienteList;
 }(EntityLocalData));
