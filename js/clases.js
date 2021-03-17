@@ -13,18 +13,26 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 var EntityLocalData = /** @class */ (function () {
-    function EntityLocalData(formId, galeryId) {
+    function EntityLocalData(nameFile, logicFile) {
         this.nameFile = "";
         this.logicFile = "";
-        this.form = document.querySelector(formId);
-        this.formElements = this.form.elements;
-        this.table = document.querySelector(galeryId);
+        this.form = document.querySelector(".form");
+        this.formElements = new Array();
+        for (var i = 0; i < this.form.elements.length; i++) {
+            var element = this.form.elements.item(i);
+            if (!element.classList.contains("btn")) {
+                this.formElements.push(element);
+            }
+        }
+        this.table = document.querySelector(".table");
+        this.nameFile = nameFile;
+        this.logicFile = logicFile;
     }
     EntityLocalData.prototype.getData = function () {
         var output = new Array();
         var ajax = new XMLHttpRequest();
         ajax.overrideMimeType("application/json");
-        ajax.open('GET', "./json/" + this.nameFile + ".json", false);
+        ajax.open('GET', "../json/" + this.nameFile + ".json", false);
         ajax.onreadystatechange = function () {
             if (ajax.readyState == 4 && ajax.status == 200) {
                 output = JSON.parse(ajax.responseText);
@@ -42,10 +50,7 @@ var EntityLocalData = /** @class */ (function () {
         var fila = celda.parentElement;
         var idCelda = fila.querySelector("td");
         var id = idCelda.textContent;
-        this.removeRow(fila);
         this.removeFromID(id);
-    };
-    EntityLocalData.prototype.removeRow = function (fila) {
         fila.remove();
     };
     EntityLocalData.prototype.removeFromID = function (id) {
@@ -58,7 +63,7 @@ var EntityLocalData = /** @class */ (function () {
                 output.push(dato);
             }
         }
-        ajax.open("POST", "./php/" + this.logicFile + ".php?param=" + JSON.stringify(output), true);
+        ajax.open("POST", "../php/" + this.logicFile + ".php?param=" + JSON.stringify(output), true);
         ajax.send();
     };
     EntityLocalData.prototype.editData = function (e) {
@@ -70,23 +75,21 @@ var EntityLocalData = /** @class */ (function () {
         var toEdit;
         for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
             var dato = data_2[_i];
-            if (dato.id == idCelda.textContent) {
-                toEdit = dato;
-            }
+            (dato.id == idCelda.textContent) ? toEdit = dato : null;
         }
         fila.classList.add("select");
-        this.setData(toEdit);
+        this.setDataOnForm(toEdit);
     };
-    EntityLocalData.prototype.configSetData = function () {
+    EntityLocalData.prototype.configSubmit = function () {
         var _this = this;
         this.form.addEventListener("submit", function (e) {
             var ajax = new XMLHttpRequest();
-            var newData = _this.selectData();
+            var newData = _this.selectDataOfTable();
             var dataTotal = _this.getData();
             dataTotal.push(newData);
-            ajax.open("POST", "./php/" + _this.logicFile + ".php?param=" + JSON.stringify(dataTotal), true);
+            ajax.open("POST", "../php/" + _this.logicFile + ".php?param=" + JSON.stringify(dataTotal), true);
             ajax.send();
-            _this.addRow(newData);
+            _this.addRowOnTable(newData);
             _this.form.reset();
             e.preventDefault();
         });
@@ -101,6 +104,19 @@ var EntityLocalData = /** @class */ (function () {
         }
         return output;
     };
+    EntityLocalData.prototype.getButtons = function () {
+        var controls = {
+            btn_edit: document.createElement("button"),
+            btn_remove: document.createElement("button")
+        };
+        controls.btn_edit.type = "button";
+        controls.btn_edit.className = "btn btn-warning";
+        controls.btn_edit.textContent = "Edit";
+        controls.btn_remove.type = "button";
+        controls.btn_remove.className = "btn btn-danger";
+        controls.btn_remove.textContent = "Del";
+        return controls;
+    };
     return EntityLocalData;
 }());
 var Producto = /** @class */ (function () {
@@ -111,20 +127,28 @@ var Producto = /** @class */ (function () {
         this.precio = precio;
         this.stock = stock;
     }
-    Producto.prototype.saveId = function (producto) {
-    };
     Producto.nextId = 0;
     return Producto;
+}());
+var Cliente = /** @class */ (function () {
+    function Cliente(nombre, apellidos, dni, fecha_nac, email, password) {
+        this.id = ++Producto.nextId;
+        this.nombre = nombre;
+        this.apellidos = apellidos;
+        this.dni = dni;
+        this.fecha_nac = fecha_nac;
+        this.email = email;
+        this.password = password;
+    }
+    Cliente.nextId = 0;
+    return Cliente;
 }());
 var ProductoList = /** @class */ (function (_super) {
     __extends(ProductoList, _super);
     function ProductoList() {
-        var _this = _super.call(this, ".productosForm", ".table") || this;
-        _this.nameFile = "productos";
-        _this.logicFile = "producto";
-        return _this;
+        return _super.call(this, "productos", "producto") || this;
     }
-    ProductoList.prototype.selectData = function () {
+    ProductoList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
         var productoBruto = {
             txt_descripcion: formData.get('txt_descripcion'),
@@ -146,38 +170,25 @@ var ProductoList = /** @class */ (function (_super) {
         }
         return producto;
     };
-    ProductoList.prototype.setData = function (selected) {
+    ProductoList.prototype.setDataOnForm = function (selected) {
         this.form.classList.add("select");
-        var descriptionContainer = this.formElements.item(0);
-        var familiaContainer = this.formElements.item(1);
-        var precioContainer = this.formElements.item(2);
-        var stockContainer = this.formElements.item(3);
-        descriptionContainer.value = selected.descripcion;
-        familiaContainer.value = selected.familia;
-        precioContainer.value = selected.precio;
-        stockContainer.value = selected.stock;
+        this.formElements[0].value = selected.descripcion;
+        this.formElements[1].value = selected.familia;
+        this.formElements[2].value = selected.precio;
+        this.formElements[3].value = selected.stock;
     };
-    ProductoList.prototype.printData = function () {
+    ProductoList.prototype.printDataOnTable = function () {
         var data = this.getData();
         Producto.nextId = this.setMaxID(data);
         for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
             var producto = data_3[_i];
-            this.addRow(producto);
+            this.addRowOnTable(producto);
         }
     };
-    ProductoList.prototype.addRow = function (producto) {
+    ProductoList.prototype.addRowOnTable = function (producto) {
         var _this = this;
         var newRow;
-        var controls = {
-            btn_edit: document.createElement("button"),
-            btn_remove: document.createElement("button")
-        };
-        controls.btn_edit.type = "button";
-        controls.btn_edit.className = "btn btn-warning";
-        controls.btn_edit.textContent = "Edit";
-        controls.btn_remove.type = "button";
-        controls.btn_remove.className = "btn btn-danger";
-        controls.btn_remove.textContent = "Del";
+        var controls = this.getButtons();
         controls.btn_edit.id = "btn_edit_" + producto.id;
         controls.btn_remove.id = "btn_remove_" + producto.id;
         var bodyTable = this.table.querySelector("tbody");
@@ -193,34 +204,61 @@ var ProductoList = /** @class */ (function (_super) {
 var ClienteList = /** @class */ (function (_super) {
     __extends(ClienteList, _super);
     function ClienteList() {
-        var _this = _super.call(this, ".clientesForm", "") || this;
-        _this.nameFile = "clientes";
-        _this.logicFile = "cliente";
-        return _this;
+        return _super.call(this, "clientes", "cliente") || this;
     }
-    ClienteList.prototype.addRow = function (item) {
-        throw new Error("Method not implemented.");
-    };
-    ClienteList.prototype.setData = function (selected) {
-        throw new Error("Method not implemented.");
-    };
-    ClienteList.prototype.editData = function () {
-        throw new Error("Method not implemented.");
-    };
-    ClienteList.prototype.removeData = function () {
-        throw new Error("Method not implemented.");
-    };
-    ClienteList.prototype.selectData = function () {
+    ClienteList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
         var clienteBruto = {
-            txt_descripcion: formData.get('txt_descripcion'),
-            select: formData.get('select'),
-            num_precio: formData.get('num_precio'),
-            num_stock: formData.get('num_stock')
+            txt_nombre: formData.get('txt_nombre'),
+            txt_apellidos: formData.get('txt_apellidos'),
+            txt_dni: formData.get('txt_dni'),
+            date_nac: formData.get('date_nac'),
+            email_contact: formData.get('email_contact'),
+            pass_password: formData.get('pass_password')
         };
-        return clienteBruto;
+        var cliente = new Cliente(clienteBruto.txt_nombre, clienteBruto.txt_apellidos, clienteBruto.txt_dni, clienteBruto.date_nac, clienteBruto.email_contact, clienteBruto.pass_password);
+        if (this.form.classList.contains("select")) {
+            var filaSelect = this.table.querySelector(".select");
+            var idCelda = filaSelect.querySelector("td");
+            var id = idCelda.textContent;
+            cliente.id = parseInt(id);
+            Cliente.nextId = this.setMaxID(this.getData());
+            this.removeFromID(id); //Fallo aqui no borra
+            this.form.classList.remove("select");
+            filaSelect.classList.remove("select");
+        }
+        return cliente;
     };
-    ClienteList.prototype.printData = function () {
+    ClienteList.prototype.setDataOnForm = function (selected) {
+        this.form.classList.add("select");
+        this.formElements[0].value = selected.nombre;
+        this.formElements[1].value = selected.apellidos;
+        this.formElements[2].value = selected.dni;
+        this.formElements[3].value = selected.date_nac;
+        this.formElements[4].value = selected.email;
+        this.formElements[5].value = selected.password;
+    };
+    ClienteList.prototype.printDataOnTable = function () {
+        var data = this.getData();
+        Cliente.nextId = this.setMaxID(data);
+        for (var _i = 0, data_4 = data; _i < data_4.length; _i++) {
+            var cliente = data_4[_i];
+            this.addRowOnTable(cliente);
+        }
+    };
+    ClienteList.prototype.addRowOnTable = function (cliente) {
+        var _this = this;
+        var newRow;
+        var controls = this.getButtons();
+        controls.btn_edit.id = "btn_edit_" + cliente.id;
+        controls.btn_remove.id = "btn_remove_" + cliente.id;
+        var bodyTable = this.table.querySelector("tbody");
+        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + cliente.id + "</td>\n                <td>" + cliente.precio + "</td>\n                <td>" + cliente.stock + "</td>\n                <td>" + cliente.familia + "</td>\n                <td>" + cliente.descripcion + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
+        bodyTable.innerHTML += newRow;
+        var btn_edit = document.getElementById("btn_edit_" + cliente.id);
+        var btn_remove = document.getElementById("btn_remove_" + cliente.id);
+        btn_edit.addEventListener("click", function (e) { return _this.editData(e); });
+        btn_remove.addEventListener("click", function (e) { return _this.removeData(e); });
     };
     return ClienteList;
 }(EntityLocalData));
@@ -232,19 +270,16 @@ var VentaList = /** @class */ (function (_super) {
         _this.logicFile = "venta";
         return _this;
     }
-    VentaList.prototype.addRow = function (item) {
+    VentaList.prototype.addRowOnTable = function (item) {
         throw new Error("Method not implemented.");
     };
-    VentaList.prototype.setData = function (selected) {
-        throw new Error("Method not implemented.");
-    };
-    VentaList.prototype.editData = function () {
+    VentaList.prototype.setDataOnForm = function (selected) {
         throw new Error("Method not implemented.");
     };
     VentaList.prototype.removeData = function () {
         throw new Error("Method not implemented.");
     };
-    VentaList.prototype.selectData = function () {
+    VentaList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
         var ventaBruto = {
             txt_descripcion: formData.get('txt_descripcion'),
@@ -254,6 +289,6 @@ var VentaList = /** @class */ (function (_super) {
         };
         return ventaBruto;
     };
-    VentaList.prototype.printData = function () { };
+    VentaList.prototype.printDataOnTable = function () { };
     return VentaList;
 }(EntityLocalData));
