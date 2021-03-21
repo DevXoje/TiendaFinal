@@ -63,7 +63,7 @@ var EntityLocalData = /** @class */ (function () {
                 output.push(dato);
             }
         }
-        ajax.open("POST", "../php/" + this.logicFile + ".php?param=" + JSON.stringify(output), true);
+        ajax.open("POST", "./../../php/" + this.logicFile + ".php?param=" + JSON.stringify(output), true);
         ajax.send();
     };
     EntityLocalData.prototype.editData = function (e) {
@@ -79,15 +79,35 @@ var EntityLocalData = /** @class */ (function () {
         }
         fila.classList.add("select");
         this.setDataOnForm(toEdit);
+        this.configBtnOnEdit(celda);
+    };
+    EntityLocalData.prototype.configBtnOnEdit = function (celdaBtn) {
+        var btns = this.table.querySelectorAll("button");
+        var btn_cancelEdit = document.createElement("button");
+        btn_cancelEdit.type = "button";
+        btn_cancelEdit.className = "btn btn-danger";
+        btn_cancelEdit.addEventListener("click", this.cancelEdit);
+        btn_cancelEdit.textContent = "CANCELAR";
+        btns.forEach(function (btn) {
+            btn.style.display = "none";
+        });
+        celdaBtn.appendChild(btn_cancelEdit);
+    };
+    EntityLocalData.prototype.cancelEdit = function () {
+        this.form.reset();
+        var elements = document.querySelectorAll(".select");
+        elements.forEach(function (element) {
+            element.classList.remove("select");
+        });
     };
     EntityLocalData.prototype.configSubmit = function () {
         var _this = this;
         this.form.addEventListener("submit", function (e) {
             var ajax = new XMLHttpRequest();
-            var newData = _this.selectDataOfTable();
             var dataTotal = _this.getData();
+            var newData = _this.selectDataOfTable();
             dataTotal.push(newData);
-            ajax.open("POST", "../php/" + _this.logicFile + ".php?param=" + JSON.stringify(dataTotal), true);
+            ajax.open("POST", "./../../php/" + _this.logicFile + ".php?param=" + JSON.stringify(dataTotal), true);
             ajax.send();
             _this.addRowOnTable(newData);
             _this.form.reset();
@@ -148,6 +168,11 @@ var ProductoList = /** @class */ (function (_super) {
     function ProductoList() {
         return _super.call(this, "productos", "producto") || this;
     }
+    ProductoList.prototype.getData = function () {
+        var data = _super.prototype.getData.call(this);
+        Producto.nextId = this.setMaxID(data);
+        return data;
+    };
     ProductoList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
         var productoBruto = {
@@ -162,8 +187,6 @@ var ProductoList = /** @class */ (function (_super) {
             var idCelda = filaSelect.querySelector("td");
             var id = idCelda.textContent;
             producto.id = parseInt(id);
-            Producto.nextId = this.setMaxID(this.getData());
-            ;
             this.removeFromID(id);
             this.form.classList.remove("select");
             filaSelect.classList.remove("select");
@@ -179,7 +202,6 @@ var ProductoList = /** @class */ (function (_super) {
     };
     ProductoList.prototype.printDataOnTable = function () {
         var data = this.getData();
-        Producto.nextId = this.setMaxID(data);
         for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
             var producto = data_3[_i];
             this.addRowOnTable(producto);
@@ -204,12 +226,16 @@ var ProductoList = /** @class */ (function (_super) {
 var ClienteList = /** @class */ (function (_super) {
     __extends(ClienteList, _super);
     function ClienteList() {
-        var _this = _super.call(this, "clientes", "cliente") || this;
-        _this.setConfigEyePassword();
-        return _this;
+        return _super.call(this, "clientes", "cliente") || this;
     }
+    ClienteList.prototype.getData = function () {
+        var data = _super.prototype.getData.call(this);
+        Cliente.nextId = this.setMaxID(data);
+        return data;
+    };
     ClienteList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
+        Cliente.nextId = this.setMaxID(this.getData());
         var clienteBruto = {
             txt_nombre: formData.get('txt_nombre'),
             txt_apellidos: formData.get('txt_apellidos'),
@@ -242,7 +268,6 @@ var ClienteList = /** @class */ (function (_super) {
     };
     ClienteList.prototype.printDataOnTable = function () {
         var data = this.getData();
-        Cliente.nextId = this.setMaxID(data);
         for (var _i = 0, data_4 = data; _i < data_4.length; _i++) {
             var cliente = data_4[_i];
             this.addRowOnTable(cliente);
@@ -298,30 +323,104 @@ var ClienteList = /** @class */ (function (_super) {
 var VentaList = /** @class */ (function (_super) {
     __extends(VentaList, _super);
     function VentaList() {
-        var _this = _super.call(this, ".ventaForm", "") || this;
-        _this.nameFile = "ventas";
-        _this.logicFile = "venta";
+        var _this = _super.call(this, "ventas", "venta") || this;
+        _this.configEmpezar();
         return _this;
     }
-    VentaList.prototype.addRowOnTable = function (item) {
-        throw new Error("Method not implemented.");
+    VentaList.prototype.selectDataOfTable = function () {
+        var formData = new FormData(this.form);
+        var ventaBruto = {
+            select_cliente: formData.get('select_cliente'),
+            select_productos: formData.get('select_productos'),
+            num_cantidad: parseInt(formData.get('num_cantidad'))
+        };
+        /*const venta = new Cliente(
+            clienteBruto.txt_nombre,
+            clienteBruto.txt_apellidos,
+            clienteBruto.txt_dni,
+            clienteBruto.date_nac,
+            clienteBruto.email_contact,
+            clienteBruto.pass_password,
+        );
+        if (this.form.classList.contains("select")) {
+            const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
+            const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
+            const id = idCelda.textContent as string;
+            cliente.id = parseInt(id);
+            Cliente.nextId = this.setMaxID(this.getData());
+            this.removeFromID(id);//Fallo aqui no borra
+            this.form.classList.remove("select");
+            filaSelect.classList.remove("select");
+        }
+        return cliente;*/
     };
     VentaList.prototype.setDataOnForm = function (selected) {
         throw new Error("Method not implemented.");
     };
-    VentaList.prototype.removeData = function () {
+    VentaList.prototype.printDataOnTable = function () {
         throw new Error("Method not implemented.");
     };
-    VentaList.prototype.selectDataOfTable = function () {
-        var formData = new FormData(this.form);
-        var ventaBruto = {
-            txt_descripcion: formData.get('txt_descripcion'),
-            select: formData.get('select'),
-            num_precio: formData.get('num_precio'),
-            num_stock: formData.get('num_stock')
-        };
-        return ventaBruto;
+    VentaList.prototype.addRowOnTable = function (item) {
+        throw new Error("Method not implemented.");
     };
-    VentaList.prototype.printDataOnTable = function () { };
+    //Self methods
+    VentaList.prototype.configEmpezar = function () {
+        var _this = this;
+        var btn_empezar = document.getElementById("btn_empezar");
+        btn_empezar.onclick = function () {
+            var formGroupClient = _this.form.querySelector(".d-none");
+            btn_empezar.style.display = "none";
+            _this.form.classList.remove("d-none");
+            formGroupClient.classList.remove("d-none");
+            _this.loadClients();
+        };
+    };
+    VentaList.prototype.loadClients = function () {
+        var _this = this;
+        var data = new ClienteList().getData();
+        var inputSelect = document.getElementById("select_cliente");
+        for (var i = 0; i < data.length; i++) {
+            var newOption = document.createElement("option");
+            var cliente = data[i];
+            newOption.innerHTML = cliente.id + ".- " + cliente.nombre + " - " + cliente.dni;
+            newOption.value = cliente.id.toString();
+            inputSelect.appendChild(newOption);
+        }
+        inputSelect.onchange = function () {
+            if (inputSelect.value != "#") {
+                var formGroupProductoCantidad = _this.form.querySelector(".d-none");
+                var productoCantidad = formGroupProductoCantidad.querySelectorAll(".form-group");
+                var productoDiv = productoCantidad.item(0);
+                var cantidadDiv_1 = productoCantidad.item(1);
+                var inputProducto_1 = document.getElementById("select_productos");
+                formGroupProductoCantidad.classList.remove("d-none");
+                cantidadDiv_1.classList.add("d-none");
+                inputProducto_1.disabled = false;
+                _this.loadProductos();
+                inputProducto_1.onchange = function () {
+                    if (inputProducto_1.value != "#") {
+                        cantidadDiv_1.classList.remove("d-none");
+                    }
+                };
+            }
+            else {
+            }
+        };
+    };
+    VentaList.prototype.loadProductos = function () {
+        var data = new ProductoList().getData();
+        var inputSelect = document.getElementById("select_productos");
+        console.log(data);
+        for (var i = 0; i < data.length; i++) {
+            var newOption = document.createElement("option");
+            var producto = data[i];
+            console.log(producto);
+            newOption.innerHTML = producto.id + ".- " + producto.familia + " - " + producto.precio;
+            newOption.value = producto.id.toString();
+            inputSelect.appendChild(newOption);
+        }
+    };
+    VentaList.prototype.configAddProduct = function () {
+    };
     return VentaList;
 }(EntityLocalData));

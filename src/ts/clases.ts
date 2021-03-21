@@ -53,7 +53,7 @@ abstract class EntityLocalData {
 				output.push(dato);
 			}
 		}
-		ajax.open("POST", `../php/${this.logicFile}.php?param=${JSON.stringify(output)}`, true);
+		ajax.open("POST", `./../../php/${this.logicFile}.php?param=${JSON.stringify(output)}`, true);
 		ajax.send();
 	}
 	editData(e: Event) {
@@ -68,15 +68,37 @@ abstract class EntityLocalData {
 		}
 		fila.classList.add("select");
 		this.setDataOnForm(toEdit);
+		this.configBtnOnEdit(celda);
 
+	}
+	configBtnOnEdit(celdaBtn: HTMLTableDataCellElement) {
+		const btns = this.table.querySelectorAll("button");
+		const btn_cancelEdit = document.createElement("button");
+		btn_cancelEdit.type = "button";
+		btn_cancelEdit.className = "btn btn-danger";
+		btn_cancelEdit.addEventListener("click", this.cancelEdit);
+		btn_cancelEdit.textContent = "CANCELAR"
+		btns.forEach((btn) => {
+			btn.style.display = "none";
+		});
+		celdaBtn.appendChild(btn_cancelEdit);
+
+	}
+	cancelEdit() {
+		this.form.reset();
+		const elements = document.querySelectorAll(".select");
+		elements.forEach((element) => {
+			element.classList.remove("select");
+		})
 	}
 	configSubmit() {
 		this.form.addEventListener("submit", (e: Event) => {
 			var ajax = new XMLHttpRequest();
-			const newData = this.selectDataOfTable();
 			const dataTotal: Array<any> = this.getData();
+			const newData = this.selectDataOfTable();
+
 			dataTotal.push(newData);
-			ajax.open("POST", `../php/${this.logicFile}.php?param=${JSON.stringify(dataTotal)}`, true);
+			ajax.open("POST", `./../../php/${this.logicFile}.php?param=${JSON.stringify(dataTotal)}`, true);
 			ajax.send();
 			this.addRowOnTable(newData);
 			this.form.reset();
@@ -161,6 +183,11 @@ class ProductoList extends EntityLocalData {
 	constructor() {
 		super("productos", "producto");
 	}
+	getData(): Array<Producto> {
+		const data = super.getData();
+		Producto.nextId = this.setMaxID(data);
+		return data
+	}
 	selectDataOfTable() {
 		const formData = new FormData(this.form);
 		const productoBruto = {
@@ -180,7 +207,6 @@ class ProductoList extends EntityLocalData {
 			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
 			const id = idCelda.textContent as string;
 			producto.id = parseInt(id);
-			Producto.nextId = this.setMaxID(this.getData());;
 			this.removeFromID(id);
 			this.form.classList.remove("select");
 			filaSelect.classList.remove("select");
@@ -189,7 +215,6 @@ class ProductoList extends EntityLocalData {
 	}
 	setDataOnForm(selected: any) {
 		this.form.classList.add("select");
-
 		this.formElements[0].value = selected.descripcion;
 		this.formElements[1].value = selected.familia;
 		this.formElements[2].value = selected.precio;
@@ -197,7 +222,6 @@ class ProductoList extends EntityLocalData {
 	}
 	printDataOnTable() {
 		const data: Array<Producto> = this.getData();
-		Producto.nextId = this.setMaxID(data);
 		for (const producto of data) {
 			this.addRowOnTable(producto)
 		}
@@ -231,10 +255,15 @@ class ClienteList extends EntityLocalData {
 
 	constructor() {
 		super("clientes", "cliente");
-		this.setConfigEyePassword();
+	}
+	getData(): Array<Cliente> {
+		const data = super.getData();
+		Cliente.nextId = this.setMaxID(data);
+		return data
 	}
 	selectDataOfTable() {
 		const formData = new FormData(this.form);
+		Cliente.nextId = this.setMaxID(this.getData());
 		const clienteBruto = {
 			txt_nombre: formData.get('txt_nombre') as string,
 			txt_apellidos: formData.get('txt_apellidos') as string,
@@ -275,7 +304,6 @@ class ClienteList extends EntityLocalData {
 	}
 	printDataOnTable() {
 		const data: Array<Cliente> = this.getData();
-		Cliente.nextId = this.setMaxID(data);
 		for (const cliente of data) {
 			this.addRowOnTable(cliente);
 		}
@@ -339,30 +367,112 @@ class ClienteList extends EntityLocalData {
 
 }
 class VentaList extends EntityLocalData {
-	addRowOnTable(item: any) {
-		throw new Error("Method not implemented.");
-	}
-	setDataOnForm(selected: any) {
-		throw new Error("Method not implemented.");
-	}
-
-	removeData() {
-		throw new Error("Method not implemented.");
+	constructor() {
+		super("ventas", "venta");
+		this.configEmpezar();
 	}
 	selectDataOfTable() {
 		const formData = new FormData(this.form);
 		const ventaBruto = {
-			txt_descripcion: formData.get('txt_descripcion') as string,
-			select: formData.get('select') as string,
-			num_precio: formData.get('num_precio') as string,
-			num_stock: formData.get('num_stock') as string
+			select_cliente: formData.get('select_cliente') as string,
+			select_productos: formData.get('select_productos') as string,
+			num_cantidad: parseInt(formData.get('num_cantidad') as string)
 		}
-		return ventaBruto;
+		/*const venta = new Cliente(
+			clienteBruto.txt_nombre,
+			clienteBruto.txt_apellidos,
+			clienteBruto.txt_dni,
+			clienteBruto.date_nac,
+			clienteBruto.email_contact,
+			clienteBruto.pass_password,
+		);
+		if (this.form.classList.contains("select")) {
+			const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
+			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
+			const id = idCelda.textContent as string;
+			cliente.id = parseInt(id);
+			Cliente.nextId = this.setMaxID(this.getData());
+			this.removeFromID(id);//Fallo aqui no borra
+			this.form.classList.remove("select");
+			filaSelect.classList.remove("select");
+		}
+		return cliente;*/
 	}
-	printDataOnTable() { }
-	constructor() {
-		super(".ventaForm", "");
-		this.nameFile = "ventas";
-		this.logicFile = "venta";
+	setDataOnForm(selected: any) {
+		throw new Error("Method not implemented.");
 	}
+	printDataOnTable() {
+		throw new Error("Method not implemented.");
+	}
+	addRowOnTable(item: any) {
+		throw new Error("Method not implemented.");
+	}
+	//Self methods
+	configEmpezar() {
+		const btn_empezar = document.getElementById("btn_empezar") as HTMLButtonElement;
+		btn_empezar.onclick = () => {
+			const formGroupClient = this.form.querySelector(".d-none") as HTMLDivElement;
+
+			btn_empezar.style.display = "none";
+			this.form.classList.remove("d-none");
+			formGroupClient.classList.remove("d-none");
+
+			this.loadClients();
+
+		}
+	}
+	loadClients() {
+		const data: Array<Cliente> = new ClienteList().getData();
+		const inputSelect = document.getElementById("select_cliente") as HTMLSelectElement;
+		for (let i = 0; i < data.length; i++) {
+			const newOption = document.createElement("option");
+			const cliente: Cliente = data[i];
+			newOption.innerHTML = `${cliente.id}.- ${cliente.nombre} - ${cliente.dni}`;
+			newOption.value = cliente.id.toString();
+			inputSelect.appendChild(newOption);
+		}
+		inputSelect.onchange = () => {
+			if (inputSelect.value != "#") {
+				const formGroupProductoCantidad = this.form.querySelector(".d-none") as HTMLDivElement;
+				const productoCantidad = formGroupProductoCantidad.querySelectorAll(".form-group") as NodeList;
+				const productoDiv = productoCantidad.item(0) as HTMLDivElement;
+				const cantidadDiv = productoCantidad.item(1) as HTMLDivElement;
+				const inputProducto = document.getElementById("select_productos") as HTMLSelectElement;
+
+				formGroupProductoCantidad.classList.remove("d-none");
+				cantidadDiv.classList.add("d-none");
+				inputProducto.disabled = false;
+				this.loadProductos();
+
+				inputProducto.onchange = () => {
+					if (inputProducto.value != "#") {
+						cantidadDiv.classList.remove("d-none");
+					}
+				}
+
+
+
+			} else {
+
+			}
+		}
+	}
+	loadProductos() {
+		const data: Array<Producto> = new ProductoList().getData();
+		const inputSelect = document.getElementById("select_productos") as HTMLSelectElement;
+		console.log(data);
+		for (let i = 0; i < data.length; i++) {
+			const newOption = document.createElement("option");
+			const producto: Producto = data[i];
+			console.log(producto);
+			newOption.innerHTML = `${producto.id}.- ${producto.familia} - ${producto.precio}`;
+			newOption.value = producto.id.toString();
+			inputSelect.appendChild(newOption);
+		}
+	}
+
+	configAddProduct() {
+
+	}
+
 }

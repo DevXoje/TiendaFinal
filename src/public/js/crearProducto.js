@@ -1,4 +1,4 @@
 "use strict";
-var pList = new ProductoList();
-pList.configSubmit();
-pList.printDataOnTable();
+var productoList = new ProductoList();
+productoList.configSubmit();
+productoList.printDataOnTable();

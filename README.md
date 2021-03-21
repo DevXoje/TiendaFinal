@@ -9,3 +9,5 @@ Dado el que no se actualiza la vista: - Si creas 2 elementos seguidos, en la vis
 ## Fallo 3(Solo ultimo elemento interactuable):
 
 ## Fallo 4(setData Fecha fail):
+
+## Fallo 5(Fallan todos los Crear):

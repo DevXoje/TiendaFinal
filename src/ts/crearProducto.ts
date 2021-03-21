@@ -1,3 +1,3 @@
-const pList = new ProductoList();
-pList.configSubmit();
-pList.printDataOnTable();
+const productoList = new ProductoList();
+productoList.configSubmit();
+productoList.printDataOnTable();
