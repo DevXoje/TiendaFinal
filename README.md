@@ -2,7 +2,8 @@
 
 ## Fallo 1(ID Duplicado):
 
-    Solo pasa Clientes
+     Solo pasa Clientes
+     Se reinicia
 
 ## Fallo 2(No corresponcendia vista/logica):
 
@@ -10,6 +11,4 @@ Dado el que no se actualiza la vista, si creas 2 elementos seguidos, en la vista
 
 ## Fallo 3(Solo ultimo elemento interactuable):
 
-## Fallo 4(setData Fecha fail):
-
-## Fallo 5(Fallan todos los Crear):
+De hecho en cliente es el primero y en producto es el ultimo

@@ -76,7 +76,7 @@ abstract class EntityLocalData {
 		const btn_cancelEdit = document.createElement("button");
 		btn_cancelEdit.type = "button";
 		btn_cancelEdit.className = "btn btn-danger";
-		btn_cancelEdit.onclick = () => this.cancelEdit();
+		btn_cancelEdit.onclick = () => this.endEdit();
 		btn_cancelEdit.textContent = "CANCELAR"
 		btns.forEach((btn) => {
 			btn.style.display = "none";
@@ -84,7 +84,7 @@ abstract class EntityLocalData {
 		celdaBtn.appendChild(btn_cancelEdit);
 
 	}
-	cancelEdit() {
+	endEdit() {
 		this.form.reset();
 		const elements = document.querySelectorAll(".select");
 		const btns = this.table.querySelectorAll("button");
@@ -136,12 +136,17 @@ abstract class EntityLocalData {
 		controls.btn_remove.textContent = "Del";
 		return controls;
 	}
-
-	abstract printDataOnTable(): any;
+	printDataOnTable() {
+		const data: Array<any> = this.getData();
+		for (const producto of data) {
+			this.addRowOnTable(producto)
+		}
+	};
 	abstract selectDataOfTable(): any;
 	abstract addRowOnTable(item: any): any;//Posible abstraccion a clase padre
 	abstract setDataOnForm(selected: any): any;
 }
+
 class Producto {
 	static nextId = 0;
 	id: number;
@@ -158,6 +163,14 @@ class Producto {
 		this.familia = familia;
 		this.precio = precio;
 		this.stock = stock;
+	}
+}
+class ProductoVendido extends Producto {
+	cantidad: number;
+	constructor(producto: Producto, cantidad: number) {
+		super(producto.descripcion, producto.familia, producto.precio, producto.stock);
+		this.id = producto.id;
+		this.cantidad = cantidad;
 	}
 }
 class Cliente {
@@ -184,6 +197,21 @@ class Cliente {
 		this.password = password;
 	}
 }
+class Venta {
+	static nextId = 0;
+	id: number;
+	cliente: Cliente;
+	productos: Array<ProductoVendido>;
+	constructor(cliente: Cliente) {
+		this.id = ++Venta.nextId;
+		this.cliente = cliente;
+		this.productos = new Array<ProductoVendido>();
+	}
+	addProducto(newProducto: Producto, cantidad: number) {
+
+		this.productos.push(new ProductoVendido(newProducto, cantidad));
+	}
+}
 class ProductoList extends EntityLocalData {
 	constructor() {
 		super("productos", "producto");
@@ -195,6 +223,7 @@ class ProductoList extends EntityLocalData {
 	}
 	selectDataOfTable() {
 		const formData = new FormData(this.form);
+		Producto.nextId = this.setMaxID(this.getData());
 		const productoBruto = {
 			txt_descripcion: formData.get('txt_descripcion') as string,
 			select_familia: formData.get('select_familia') as string,
@@ -212,9 +241,11 @@ class ProductoList extends EntityLocalData {
 			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
 			const id = idCelda.textContent as string;
 			producto.id = parseInt(id);
+			Producto.nextId = this.setMaxID(this.getData());
 			this.removeFromID(id);
 			this.form.classList.remove("select");
 			filaSelect.classList.remove("select");
+			this.endEdit();
 		}
 		return producto;
 	}
@@ -225,13 +256,7 @@ class ProductoList extends EntityLocalData {
 		this.formElements[2].value = selected.precio;
 		this.formElements[3].value = selected.stock;
 	}
-	printDataOnTable() {
-		const data: Array<Producto> = this.getData();
-		for (const producto of data) {
-			this.addRowOnTable(producto)
-		}
-	}
-	addRowOnTable(producto: any) {
+	addRowOnTable(producto: Producto) {
 		let newRow;
 		const controls = this.getButtons();
 
@@ -241,7 +266,7 @@ class ProductoList extends EntityLocalData {
 		newRow = `
 		<tr>
 			<td scope="row">${producto.id}</td>
-                <td>${producto.precio}</td>
+                <td>${producto.precio}€</td>
                 <td>${producto.stock}</td>
                 <td>${producto.familia}</td>
                 <td>${producto.descripcion}</td>
@@ -306,12 +331,7 @@ class ClienteList extends EntityLocalData {
 		this.formElements[4].value = selected.email;
 		this.formElements[5].value = selected.password;
 	}
-	printDataOnTable() {
-		const data: Array<Cliente> = this.getData();
-		for (const cliente of data) {
-			this.addRowOnTable(cliente);
-		}
-	}
+
 	addRowOnTable(cliente: Cliente) {
 		let newRow;
 		const controls = this.getButtons();
@@ -353,20 +373,6 @@ class ClienteList extends EntityLocalData {
 				eye.classList.replace("fa-eye", "fa-eye-slash");
 			}
 		}
-		/*$(document).ready(function() {
-	$("#show_hide_password a").on('click', function(event) {
-		event.preventDefault();
-		if($('#show_hide_password input').attr("type") == "text"){
-			$('#show_hide_password input').attr('type', 'password');
-			$('#show_hide_password i').addClass( "fa-eye-slash" );
-			$('#show_hide_password i').removeClass( "fa-eye" );
-		}else if($('#show_hide_password input').attr("type") == "password"){
-			$('#show_hide_password input').attr('type', 'text');
-			$('#show_hide_password i').removeClass( "fa-eye-slash" );
-			$('#show_hide_password i').addClass( "fa-eye" );
-		}
-	});
-});*/
 	}
 
 }
@@ -382,96 +388,99 @@ class VentaList extends EntityLocalData {
 			select_productos: formData.get('select_productos') as string,
 			num_cantidad: parseInt(formData.get('num_cantidad') as string)
 		}
-		/*const venta = new Cliente(
-			clienteBruto.txt_nombre,
-			clienteBruto.txt_apellidos,
-			clienteBruto.txt_dni,
-			clienteBruto.date_nac,
-			clienteBruto.email_contact,
-			clienteBruto.pass_password,
-		);
-		if (this.form.classList.contains("select")) {
-			const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
-			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
-			const id = idCelda.textContent as string;
-			cliente.id = parseInt(id);
-			Cliente.nextId = this.setMaxID(this.getData());
-			this.removeFromID(id);//Fallo aqui no borra
-			this.form.classList.remove("select");
-			filaSelect.classList.remove("select");
-		}
-		return cliente;*/
+
 	}
 	setDataOnForm(selected: any) {
 		throw new Error("Method not implemented.");
 	}
-	printDataOnTable() {
-		throw new Error("Method not implemented.");
-	}
-	addRowOnTable(item: any) {
-		throw new Error("Method not implemented.");
+
+	addRowOnTable(venta: Venta) {
+		let newRow;
+		const bodyTable = this.table.querySelector("tbody") as HTMLElement;
+		const controls = this.getButtons();
+		const selectOutputProductos = document.createElement("select");
+		let costaTotal = 0;
+		selectOutputProductos.className = "form-select";
+
+		for (let i = 0; i < venta.productos.length; i++) {
+			const newOption = document.createElement("option");
+			const producto = venta.productos[i];
+			costaTotal += (producto.precio) * producto.cantidad;
+			newOption.innerHTML = `${producto.id}.- ${producto.familia} - ${producto.precio}€ X ${producto.cantidad}`;
+			newOption.value = producto.id.toString();
+			selectOutputProductos.appendChild(newOption);
+		}
+		controls.btn_edit.id = "btn_edit_" + venta.id;
+		controls.btn_remove.id = "btn_remove_" + venta.id;
+		newRow = `
+		<tr>
+			<td scope="row">${venta.id}</td>
+				<td>${venta.cliente.id}.- ${venta.cliente.nombre} - ${venta.cliente.dni}</td>
+				<td>${selectOutputProductos.outerHTML}</td>
+				<td>${costaTotal}</td>
+				<td>${controls.btn_edit.outerHTML}</td>
+				<td>${controls.btn_remove.outerHTML}</td>
+		</tr>`;
+		bodyTable.innerHTML += newRow;
+		const btn_edit = document.getElementById("btn_edit_" + venta.id) as HTMLButtonElement;
+		const btn_remove = document.getElementById("btn_remove_" + venta.id) as HTMLButtonElement;
+		btn_edit.addEventListener("click", (e) => this.editData(e));
+		btn_remove.addEventListener("click", (e) => this.removeData(e));
+
 	}
 	//Self methods
 	configEmpezar() {
 		const btn_empezar = document.getElementById("btn_empezar") as HTMLButtonElement;
 		btn_empezar.onclick = () => {
 			const formGroupClient = this.form.querySelector(".d-none") as HTMLDivElement;
-
 			btn_empezar.style.display = "none";
 			this.form.classList.remove("d-none");
 			formGroupClient.classList.remove("d-none");
-
 			this.loadClients();
-
 		}
 	}
 	loadClients() {
 		const data: Array<Cliente> = new ClienteList().getData();
-		const inputSelect = document.getElementById("select_cliente") as HTMLSelectElement;
+		const inputCliente = document.getElementById("select_cliente") as HTMLSelectElement;
 		for (let i = 0; i < data.length; i++) {
 			const newOption = document.createElement("option");
 			const cliente: Cliente = data[i];
 			newOption.innerHTML = `${cliente.id}.- ${cliente.nombre} - ${cliente.dni}`;
 			newOption.value = cliente.id.toString();
-			inputSelect.appendChild(newOption);
+			inputCliente.appendChild(newOption);
 		}
-		inputSelect.onchange = () => {
-			if (inputSelect.value != "#") {
-				const formGroupProductoCantidad = this.form.querySelector(".d-none") as HTMLDivElement;
-				const productoCantidad = formGroupProductoCantidad.querySelectorAll(".form-group") as NodeList;
-				const productoDiv = productoCantidad.item(0) as HTMLDivElement;
-				const cantidadDiv = productoCantidad.item(1) as HTMLDivElement;
-				const inputProducto = document.getElementById("select_productos") as HTMLSelectElement;
+		inputCliente.onchange = () => {
+			const hidenElements = this.form.querySelectorAll(".d-none") as NodeList;
+			const productoDiv = hidenElements.item(0) as HTMLDivElement;
+			const cantidadDiv = hidenElements.item(1) as HTMLDivElement;
+			const totalDiv = hidenElements.item(2) as HTMLDivElement;
+			const inputProducto = document.getElementById("select_productos") as HTMLSelectElement;
 
-				formGroupProductoCantidad.classList.remove("d-none");
-				cantidadDiv.classList.add("d-none");
-				inputProducto.disabled = false;
+			if (inputCliente.value != "none") {
+				productoDiv.classList.remove("d-none");
 				this.loadProductos();
-
 				inputProducto.onchange = () => {
-					if (inputProducto.value != "#") {
+					if (inputProducto.value != "none") {
 						cantidadDiv.classList.remove("d-none");
+					} else {
+						cantidadDiv.classList.add("d-none");
 					}
 				}
 
-
-
 			} else {
-
+				productoDiv.classList.add("d-none");
 			}
 		}
 	}
 	loadProductos() {
 		const data: Array<Producto> = new ProductoList().getData();
-		const inputSelect = document.getElementById("select_productos") as HTMLSelectElement;
-		console.log(data);
+		const inputCliente = document.getElementById("select_productos") as HTMLSelectElement;
 		for (let i = 0; i < data.length; i++) {
 			const newOption = document.createElement("option");
 			const producto: Producto = data[i];
-			console.log(producto);
-			newOption.innerHTML = `${producto.id}.- ${producto.familia} - ${producto.precio}`;
+			newOption.innerHTML = `${producto.id}.- ${producto.familia} - ${producto.precio}€`;
 			newOption.value = producto.id.toString();
-			inputSelect.appendChild(newOption);
+			inputCliente.appendChild(newOption);
 		}
 	}
 

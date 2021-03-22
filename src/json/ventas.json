@@ -1,0 +1,59 @@
+[{
+        "id": 1,
+        "cliente": {
+            "id": 1,
+            "nombre": "Jose",
+            "apellidos": "Vilches",
+            "dni": "123456789P",
+            "fecha_nac": "1990-12-12",
+            "email": "dawxoje@gmail.com",
+            "password": "1234"
+        },
+        "productos": [{
+                "id": 1,
+                "descripcion": "Componente Muy Pro",
+                "familia": "componentes",
+                "precio": 150,
+                "stock": 12,
+                "cantidad": 2
+            },
+            {
+                "id": 2,
+                "descripcion": "Componente Chungo de Apple",
+                "familia": "componentes",
+                "precio": 1200,
+                "stock": 10,
+                "cantidad": 2
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "cliente": {
+            "id": 2,
+            "nombre": "Juan",
+            "apellidos": "Bahia",
+            "dni": "987654321J",
+            "fecha_nac": "1994-12-12",
+            "email": "dawxoje@gmail.com",
+            "password": "1234"
+        },
+        "productos": [{
+                "id": 1,
+                "descripcion": "Componente Muy Pro",
+                "familia": "componentes",
+                "precio": 150,
+                "stock": 12,
+                "cantidad": 2
+            },
+            {
+                "id": 2,
+                "descripcion": "Componente Chungo de Apple",
+                "familia": "componentes",
+                "precio": 1200,
+                "stock": 10,
+                "cantidad": 1
+            }
+        ]
+    }
+]

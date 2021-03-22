@@ -87,14 +87,14 @@ var EntityLocalData = /** @class */ (function () {
         var btn_cancelEdit = document.createElement("button");
         btn_cancelEdit.type = "button";
         btn_cancelEdit.className = "btn btn-danger";
-        btn_cancelEdit.onclick = function () { return _this.cancelEdit(); };
+        btn_cancelEdit.onclick = function () { return _this.endEdit(); };
         btn_cancelEdit.textContent = "CANCELAR";
         btns.forEach(function (btn) {
             btn.style.display = "none";
         });
         celdaBtn.appendChild(btn_cancelEdit);
     };
-    EntityLocalData.prototype.cancelEdit = function () {
+    EntityLocalData.prototype.endEdit = function () {
         this.form.reset();
         var elements = document.querySelectorAll(".select");
         var btns = this.table.querySelectorAll("button");
@@ -142,6 +142,14 @@ var EntityLocalData = /** @class */ (function () {
         controls.btn_remove.textContent = "Del";
         return controls;
     };
+    EntityLocalData.prototype.printDataOnTable = function () {
+        var data = this.getData();
+        for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
+            var producto = data_3[_i];
+            this.addRowOnTable(producto);
+        }
+    };
+    ;
     return EntityLocalData;
 }());
 var Producto = /** @class */ (function () {
@@ -155,6 +163,16 @@ var Producto = /** @class */ (function () {
     Producto.nextId = 0;
     return Producto;
 }());
+var ProductoVendido = /** @class */ (function (_super) {
+    __extends(ProductoVendido, _super);
+    function ProductoVendido(producto, cantidad) {
+        var _this = _super.call(this, producto.descripcion, producto.familia, producto.precio, producto.stock) || this;
+        _this.id = producto.id;
+        _this.cantidad = cantidad;
+        return _this;
+    }
+    return ProductoVendido;
+}(Producto));
 var Cliente = /** @class */ (function () {
     function Cliente(nombre, apellidos, dni, fecha_nac, email, password) {
         this.id = ++Producto.nextId;
@@ -168,6 +186,18 @@ var Cliente = /** @class */ (function () {
     Cliente.nextId = 0;
     return Cliente;
 }());
+var Venta = /** @class */ (function () {
+    function Venta(cliente) {
+        this.id = ++Venta.nextId;
+        this.cliente = cliente;
+        this.productos = new Array();
+    }
+    Venta.prototype.addProducto = function (newProducto, cantidad) {
+        this.productos.push(new ProductoVendido(newProducto, cantidad));
+    };
+    Venta.nextId = 0;
+    return Venta;
+}());
 var ProductoList = /** @class */ (function (_super) {
     __extends(ProductoList, _super);
     function ProductoList() {
@@ -180,6 +210,7 @@ var ProductoList = /** @class */ (function (_super) {
     };
     ProductoList.prototype.selectDataOfTable = function () {
         var formData = new FormData(this.form);
+        Producto.nextId = this.setMaxID(this.getData());
         var productoBruto = {
             txt_descripcion: formData.get('txt_descripcion'),
             select_familia: formData.get('select_familia'),
@@ -192,9 +223,11 @@ var ProductoList = /** @class */ (function (_super) {
             var idCelda = filaSelect.querySelector("td");
             var id = idCelda.textContent;
             producto.id = parseInt(id);
+            Producto.nextId = this.setMaxID(this.getData());
             this.removeFromID(id);
             this.form.classList.remove("select");
             filaSelect.classList.remove("select");
+            this.endEdit();
         }
         return producto;
     };
@@ -205,13 +238,6 @@ var ProductoList = /** @class */ (function (_super) {
         this.formElements[2].value = selected.precio;
         this.formElements[3].value = selected.stock;
     };
-    ProductoList.prototype.printDataOnTable = function () {
-        var data = this.getData();
-        for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
-            var producto = data_3[_i];
-            this.addRowOnTable(producto);
-        }
-    };
     ProductoList.prototype.addRowOnTable = function (producto) {
         var _this = this;
         var newRow;
@@ -219,7 +245,7 @@ var ProductoList = /** @class */ (function (_super) {
         controls.btn_edit.id = "btn_edit_" + producto.id;
         controls.btn_remove.id = "btn_remove_" + producto.id;
         var bodyTable = this.table.querySelector("tbody");
-        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + producto.id + "</td>\n                <td>" + producto.precio + "</td>\n                <td>" + producto.stock + "</td>\n                <td>" + producto.familia + "</td>\n                <td>" + producto.descripcion + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
+        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + producto.id + "</td>\n                <td>" + producto.precio + "\u20AC</td>\n                <td>" + producto.stock + "</td>\n                <td>" + producto.familia + "</td>\n                <td>" + producto.descripcion + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
         bodyTable.innerHTML += newRow;
         var btn_edit = document.getElementById("btn_edit_" + producto.id);
         var btn_remove = document.getElementById("btn_remove_" + producto.id);
@@ -271,13 +297,6 @@ var ClienteList = /** @class */ (function (_super) {
         this.formElements[4].value = selected.email;
         this.formElements[5].value = selected.password;
     };
-    ClienteList.prototype.printDataOnTable = function () {
-        var data = this.getData();
-        for (var _i = 0, data_4 = data; _i < data_4.length; _i++) {
-            var cliente = data_4[_i];
-            this.addRowOnTable(cliente);
-        }
-    };
     ClienteList.prototype.addRowOnTable = function (cliente) {
         var _this = this;
         var newRow;
@@ -308,20 +327,6 @@ var ClienteList = /** @class */ (function (_super) {
                 eye.classList.replace("fa-eye", "fa-eye-slash");
             }
         };
-        /*$(document).ready(function() {
-    $("#show_hide_password a").on('click', function(event) {
-        event.preventDefault();
-        if($('#show_hide_password input').attr("type") == "text"){
-            $('#show_hide_password input').attr('type', 'password');
-            $('#show_hide_password i').addClass( "fa-eye-slash" );
-            $('#show_hide_password i').removeClass( "fa-eye" );
-        }else if($('#show_hide_password input').attr("type") == "password"){
-            $('#show_hide_password input').attr('type', 'text');
-            $('#show_hide_password i').removeClass( "fa-eye-slash" );
-            $('#show_hide_password i').addClass( "fa-eye" );
-        }
-    });
-});*/
     };
     return ClienteList;
 }(EntityLocalData));
@@ -339,34 +344,34 @@ var VentaList = /** @class */ (function (_super) {
             select_productos: formData.get('select_productos'),
             num_cantidad: parseInt(formData.get('num_cantidad'))
         };
-        /*const venta = new Cliente(
-            clienteBruto.txt_nombre,
-            clienteBruto.txt_apellidos,
-            clienteBruto.txt_dni,
-            clienteBruto.date_nac,
-            clienteBruto.email_contact,
-            clienteBruto.pass_password,
-        );
-        if (this.form.classList.contains("select")) {
-            const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
-            const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
-            const id = idCelda.textContent as string;
-            cliente.id = parseInt(id);
-            Cliente.nextId = this.setMaxID(this.getData());
-            this.removeFromID(id);//Fallo aqui no borra
-            this.form.classList.remove("select");
-            filaSelect.classList.remove("select");
-        }
-        return cliente;*/
     };
     VentaList.prototype.setDataOnForm = function (selected) {
         throw new Error("Method not implemented.");
     };
-    VentaList.prototype.printDataOnTable = function () {
-        throw new Error("Method not implemented.");
-    };
-    VentaList.prototype.addRowOnTable = function (item) {
-        throw new Error("Method not implemented.");
+    VentaList.prototype.addRowOnTable = function (venta) {
+        var _this = this;
+        var newRow;
+        var bodyTable = this.table.querySelector("tbody");
+        var controls = this.getButtons();
+        var selectOutputProductos = document.createElement("select");
+        var costaTotal = 0;
+        selectOutputProductos.className = "form-select";
+        for (var i = 0; i < venta.productos.length; i++) {
+            var newOption = document.createElement("option");
+            var producto = venta.productos[i];
+            costaTotal += (producto.precio) * producto.cantidad;
+            newOption.innerHTML = producto.id + ".- " + producto.familia + " - " + producto.precio + "\u20AC X " + producto.cantidad;
+            newOption.value = producto.id.toString();
+            selectOutputProductos.appendChild(newOption);
+        }
+        controls.btn_edit.id = "btn_edit_" + venta.id;
+        controls.btn_remove.id = "btn_remove_" + venta.id;
+        newRow = "\n\t\t<tr>\n\t\t\t<td scope=\"row\">" + venta.id + "</td>\n\t\t\t\t<td>" + venta.cliente.id + ".- " + venta.cliente.nombre + " - " + venta.cliente.dni + "</td>\n\t\t\t\t<td>" + selectOutputProductos.outerHTML + "</td>\n\t\t\t\t<td>" + costaTotal + "</td>\n\t\t\t\t<td>" + controls.btn_edit.outerHTML + "</td>\n\t\t\t\t<td>" + controls.btn_remove.outerHTML + "</td>\n\t\t</tr>";
+        bodyTable.innerHTML += newRow;
+        var btn_edit = document.getElementById("btn_edit_" + venta.id);
+        var btn_remove = document.getElementById("btn_remove_" + venta.id);
+        btn_edit.addEventListener("click", function (e) { return _this.editData(e); });
+        btn_remove.addEventListener("click", function (e) { return _this.removeData(e); });
     };
     //Self methods
     VentaList.prototype.configEmpezar = function () {
@@ -383,46 +388,46 @@ var VentaList = /** @class */ (function (_super) {
     VentaList.prototype.loadClients = function () {
         var _this = this;
         var data = new ClienteList().getData();
-        var inputSelect = document.getElementById("select_cliente");
+        var inputCliente = document.getElementById("select_cliente");
         for (var i = 0; i < data.length; i++) {
             var newOption = document.createElement("option");
             var cliente = data[i];
             newOption.innerHTML = cliente.id + ".- " + cliente.nombre + " - " + cliente.dni;
             newOption.value = cliente.id.toString();
-            inputSelect.appendChild(newOption);
+            inputCliente.appendChild(newOption);
         }
-        inputSelect.onchange = function () {
-            if (inputSelect.value != "#") {
-                var formGroupProductoCantidad = _this.form.querySelector(".d-none");
-                var productoCantidad = formGroupProductoCantidad.querySelectorAll(".form-group");
-                var productoDiv = productoCantidad.item(0);
-                var cantidadDiv_1 = productoCantidad.item(1);
-                var inputProducto_1 = document.getElementById("select_productos");
-                formGroupProductoCantidad.classList.remove("d-none");
-                cantidadDiv_1.classList.add("d-none");
-                inputProducto_1.disabled = false;
+        inputCliente.onchange = function () {
+            var hidenElements = _this.form.querySelectorAll(".d-none");
+            var productoDiv = hidenElements.item(0);
+            var cantidadDiv = hidenElements.item(1);
+            var totalDiv = hidenElements.item(2);
+            var inputProducto = document.getElementById("select_productos");
+            if (inputCliente.value != "none") {
+                productoDiv.classList.remove("d-none");
                 _this.loadProductos();
-                inputProducto_1.onchange = function () {
-                    if (inputProducto_1.value != "#") {
-                        cantidadDiv_1.classList.remove("d-none");
+                inputProducto.onchange = function () {
+                    if (inputProducto.value != "none") {
+                        cantidadDiv.classList.remove("d-none");
+                    }
+                    else {
+                        cantidadDiv.classList.add("d-none");
                     }
                 };
             }
             else {
+                productoDiv.classList.add("d-none");
             }
         };
     };
     VentaList.prototype.loadProductos = function () {
         var data = new ProductoList().getData();
-        var inputSelect = document.getElementById("select_productos");
-        console.log(data);
+        var inputCliente = document.getElementById("select_productos");
         for (var i = 0; i < data.length; i++) {
             var newOption = document.createElement("option");
             var producto = data[i];
-            console.log(producto);
-            newOption.innerHTML = producto.id + ".- " + producto.familia + " - " + producto.precio;
+            newOption.innerHTML = producto.id + ".- " + producto.familia + " - " + producto.precio + "\u20AC";
             newOption.value = producto.id.toString();
-            inputSelect.appendChild(newOption);
+            inputCliente.appendChild(newOption);
         }
     };
     VentaList.prototype.configAddProduct = function () {
