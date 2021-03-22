@@ -76,7 +76,7 @@ abstract class EntityLocalData {
 		const btn_cancelEdit = document.createElement("button");
 		btn_cancelEdit.type = "button";
 		btn_cancelEdit.className = "btn btn-danger";
-		btn_cancelEdit.addEventListener("click", this.cancelEdit);
+		btn_cancelEdit.onclick = () => this.cancelEdit();
 		btn_cancelEdit.textContent = "CANCELAR"
 		btns.forEach((btn) => {
 			btn.style.display = "none";
@@ -87,9 +87,14 @@ abstract class EntityLocalData {
 	cancelEdit() {
 		this.form.reset();
 		const elements = document.querySelectorAll(".select");
+		const btns = this.table.querySelectorAll("button");
 		elements.forEach((element) => {
 			element.classList.remove("select");
-		})
+		});
+		btns.forEach((btn) => {
+			(btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove();
+		});
+
 	}
 	configSubmit() {
 		this.form.addEventListener("submit", (e: Event) => {
@@ -294,11 +299,10 @@ class ClienteList extends EntityLocalData {
 	}
 	setDataOnForm(selected: any) {
 		this.form.classList.add("select");
-
 		this.formElements[0].value = selected.nombre;
 		this.formElements[1].value = selected.apellidos;
 		this.formElements[2].value = selected.dni;
-		this.formElements[3].value = selected.date_nac;
+		this.formElements[3].value = selected.fecha_nac;
 		this.formElements[4].value = selected.email;
 		this.formElements[5].value = selected.password;
 	}

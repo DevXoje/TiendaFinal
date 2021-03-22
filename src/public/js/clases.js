@@ -82,11 +82,12 @@ var EntityLocalData = /** @class */ (function () {
         this.configBtnOnEdit(celda);
     };
     EntityLocalData.prototype.configBtnOnEdit = function (celdaBtn) {
+        var _this = this;
         var btns = this.table.querySelectorAll("button");
         var btn_cancelEdit = document.createElement("button");
         btn_cancelEdit.type = "button";
         btn_cancelEdit.className = "btn btn-danger";
-        btn_cancelEdit.addEventListener("click", this.cancelEdit);
+        btn_cancelEdit.onclick = function () { return _this.cancelEdit(); };
         btn_cancelEdit.textContent = "CANCELAR";
         btns.forEach(function (btn) {
             btn.style.display = "none";
@@ -96,8 +97,12 @@ var EntityLocalData = /** @class */ (function () {
     EntityLocalData.prototype.cancelEdit = function () {
         this.form.reset();
         var elements = document.querySelectorAll(".select");
+        var btns = this.table.querySelectorAll("button");
         elements.forEach(function (element) {
             element.classList.remove("select");
+        });
+        btns.forEach(function (btn) {
+            (btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove();
         });
     };
     EntityLocalData.prototype.configSubmit = function () {
@@ -262,7 +267,7 @@ var ClienteList = /** @class */ (function (_super) {
         this.formElements[0].value = selected.nombre;
         this.formElements[1].value = selected.apellidos;
         this.formElements[2].value = selected.dni;
-        this.formElements[3].value = selected.date_nac;
+        this.formElements[3].value = selected.fecha_nac;
         this.formElements[4].value = selected.email;
         this.formElements[5].value = selected.password;
     };
