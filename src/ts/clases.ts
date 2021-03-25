@@ -1,9 +1,17 @@
+/**
+ * Controla la logica comun de los 3 apartados, la conexion con el archivo fisico(almacenar), conexion con formulario(Crear-Editar) y con una tabla(Ver)
+ */
 abstract class EntityLocalData {
-	nameFile = "";
-	logicFile = "";
+	nameFile: string;
+	logicFile: string;
 	form: HTMLFormElement;
 	formElements: Array<HTMLInputElement>;
 	table: HTMLTableElement;
+	/**
+	 * Se establecen las conexiones de los contenedores HTML
+	 * @param nameFile nombre del archivo con informacion
+	 * @param logicFile nombre del archivo con la logica de conexion
+	 */
 	constructor(nameFile: string, logicFile: string) {
 		this.form = document.querySelector(".form") as HTMLFormElement;
 		this.formElements = new Array<HTMLInputElement>();
@@ -17,9 +25,13 @@ abstract class EntityLocalData {
 		this.nameFile = nameFile;
 		this.logicFile = logicFile;
 	}
+	/**
+	 * Conecta con el archico fisico de forma sincrona
+	 * @returns Array con la informacion en formato JSON
+	 */
 	getData(): Array<any> {
-		var output = new Array();
-		var ajax = new XMLHttpRequest();
+		let output = new Array();
+		let ajax = new XMLHttpRequest();
 		ajax.overrideMimeType("application/json");
 		ajax.open('GET', `./../../json/${this.nameFile}.json`, false);
 		ajax.onreadystatechange = () => {
@@ -34,6 +46,11 @@ abstract class EntityLocalData {
 
 		return output;
 	}
+
+	/**
+	 * Evento que cambiara el valor del variable isBorrrado el registro de tabla
+	 * @param e  Evento del botton borrar
+	 */
 	removeData(e: Event) {
 		const btn_remove = e.target as HTMLButtonElement;
 		const celda = btn_remove.parentElement as HTMLTableDataCellElement;
@@ -42,20 +59,28 @@ abstract class EntityLocalData {
 		const id = idCelda.textContent as string;
 		this.removeFromID(id);
 		fila.remove();
-
 	}
+
+	/**
+	 * Conecta con el archico fisico de forma asincrona, mediante la id cambia el valor de isBorrado del registro
+	 * @param id string que identifica a los registros
+	 */
 	removeFromID(id: string) {
-		var ajax = new XMLHttpRequest();
+		let ajax = new XMLHttpRequest();
 		const data: Array<any> = this.getData();
 		const output = new Array();
-		for (const dato of data) {
-			if (dato.id != id) {
-				output.push(dato);
-			}
-		}
+		data.forEach((dato) => {
+			dato.isBorrado = dato.id == id;
+			output.push(dato);
+		});
 		ajax.open("POST", `./../../php/${this.logicFile}.php?param=${JSON.stringify(output)}`, true);
 		ajax.send();
 	}
+
+	/**
+	 * Evento que editara el registro de tabla
+	 * @param e Evento del botton editar
+	 */
 	editData(e: Event) {
 		const btn_edit = e.target as HTMLButtonElement;
 		const celda = btn_edit.parentElement as HTMLTableDataCellElement;
@@ -63,14 +88,18 @@ abstract class EntityLocalData {
 		const idCelda = fila.querySelector("td") as HTMLTableDataCellElement;
 		const data: Array<any> = this.getData();
 		let toEdit;
-		for (const dato of data) {
-			(dato.id == idCelda.textContent) ? toEdit = dato : null;
-		}
+
+		data.forEach((dato) => (dato.id == idCelda.textContent) ? toEdit = dato : null);
+
 		fila.classList.add("select");
 		this.setDataOnForm(toEdit);
 		this.configBtnOnEdit(celda);
 
 	}
+	/**
+	 * Quita todos los botones de la tabla y deja un boton para cancelar el modo edicion
+	 * @param celdaBtn Celda donde esta el botton editar y donde estara el de cancelar
+	 */
 	configBtnOnEdit(celdaBtn: HTMLTableDataCellElement) {
 		const btns = this.table.querySelectorAll("button");
 		const btn_cancelEdit = document.createElement("button");
@@ -78,34 +107,52 @@ abstract class EntityLocalData {
 		btn_cancelEdit.className = "btn btn-danger";
 		btn_cancelEdit.onclick = () => this.endEdit();
 		btn_cancelEdit.textContent = "CANCELAR"
-		btns.forEach((btn) => {
-			btn.style.display = "none";
-		});
+		btns.forEach((btn) => btn.style.display = "none");
 		celdaBtn.appendChild(btn_cancelEdit);
 
 	}
+	/**
+	 * Restaura los botones ocultados y elimina el boton de cancelar
+	 */
 	endEdit() {
 		this.form.reset();
 		const elements = document.querySelectorAll(".select");
 		const btns = this.table.querySelectorAll("button");
-		elements.forEach((element) => {
-			element.classList.remove("select");
-		});
-		btns.forEach((btn) => {
-			(btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove();
-		});
-
+		elements.forEach((element) => element.classList.remove("select"));
+		btns.forEach((btn) => (btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove());
 	}
+	checkInEdit() {
+		if (this.form.classList.contains("select")) {
+			const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
+			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
+			const id = idCelda.textContent as string;
+			let ajax = new XMLHttpRequest();
+			const data: Array<any> = this.getData();
+			const output = new Array();
+			data.forEach((dato) => {
+				if (dato.id != id) output.push(dato);
+			});
+			ajax.open("POST", `./../../php/${this.logicFile}.php?param=${JSON.stringify(output)}`, true);
+			ajax.send();
+			this.form.classList.remove("select");
+			filaSelect.classList.remove("select");
+			this.endEdit();
+		}
+	}
+	/**
+	 * Prepara la logica para captura los datos del formulario y añadirlos al documento fisico
+	 */
 	configSubmit() {
 		this.form.addEventListener("submit", (e: Event) => {
-			var ajax = new XMLHttpRequest();
+			let ajax = new XMLHttpRequest();
 			const dataTotal: Array<any> = this.getData();
+			this.checkInEdit();
 			const newData = this.selectDataOfTable();
+
 
 			dataTotal.push(newData);
 			ajax.open("POST", `./../../php/${this.logicFile}.php?param=${JSON.stringify(dataTotal)}`, true);
 			ajax.send();
-			this.addRowOnTable(newData);
 			this.form.reset();
 			e.preventDefault();
 		});
@@ -138,31 +185,34 @@ abstract class EntityLocalData {
 	}
 	printDataOnTable() {
 		const data: Array<any> = this.getData();
-		for (const producto of data) {
-			this.addRowOnTable(producto)
-		}
+		data.forEach((dato) => {
+			if (!dato.isBorrado) {
+				this.addRowOnTable(dato);
+			}
+		})
+
 	};
 	abstract selectDataOfTable(): any;
 	abstract addRowOnTable(item: any): any;//Posible abstraccion a clase padre
 	abstract setDataOnForm(selected: any): any;
 }
-
 class Producto {
+	isBorrado: boolean;
 	static nextId = 0;
 	id: number;
 	stock: number;
 	precio: number;
 	familia: string;
 	descripcion: string;
-
 	constructor(descripcion: string, familia: string,
 		precio: number,
-		stock: number) {
+		stock: number, isBorrado: boolean = false) {
 		this.id = ++Producto.nextId;
 		this.descripcion = descripcion;
 		this.familia = familia;
 		this.precio = precio;
 		this.stock = stock;
+		this.isBorrado = isBorrado;
 	}
 }
 class ProductoVendido extends Producto {
@@ -174,6 +224,7 @@ class ProductoVendido extends Producto {
 	}
 }
 class Cliente {
+	isBorrado: boolean;
 	static nextId = 0;
 	id: number;
 	nombre: string;
@@ -187,7 +238,7 @@ class Cliente {
 		dni: string,
 		fecha_nac: string,
 		email: string,
-		password: string,) {
+		password: string, isBorrado: boolean = false) {
 		this.id = ++Producto.nextId;
 		this.nombre = nombre;
 		this.apellidos = apellidos;
@@ -195,17 +246,21 @@ class Cliente {
 		this.fecha_nac = fecha_nac;
 		this.email = email;
 		this.password = password;
+		this.isBorrado = isBorrado;
+
 	}
 }
 class Venta {
+	isBorrado: boolean;
 	static nextId = 0;
 	id: number;
 	cliente: Cliente;
 	productos: Array<ProductoVendido>;
-	constructor(cliente: Cliente) {
+	constructor(cliente: Cliente, isBorrado: boolean) {
 		this.id = ++Venta.nextId;
 		this.cliente = cliente;
 		this.productos = new Array<ProductoVendido>();
+		this.isBorrado = isBorrado;
 	}
 	addProducto(newProducto: Producto, cantidad: number) {
 
@@ -236,6 +291,7 @@ class ProductoList extends EntityLocalData {
 			productoBruto.num_precio,
 			productoBruto.num_stock
 		);
+		console.log(producto);
 		if (this.form.classList.contains("select")) {
 			const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
 			const idCelda = filaSelect.querySelector("td") as HTMLTableDataCellElement;
@@ -308,7 +364,7 @@ class ClienteList extends EntityLocalData {
 			clienteBruto.txt_dni,
 			clienteBruto.date_nac,
 			clienteBruto.email_contact,
-			clienteBruto.pass_password,
+			clienteBruto.pass_password
 		);
 		if (this.form.classList.contains("select")) {
 			const filaSelect = this.table.querySelector(".select") as HTMLTableRowElement;
@@ -462,8 +518,12 @@ class VentaList extends EntityLocalData {
 				inputProducto.onchange = () => {
 					if (inputProducto.value != "none") {
 						cantidadDiv.classList.remove("d-none");
+						totalDiv.classList.remove("d-none");
+						this.configAddProduct();
 					} else {
 						cantidadDiv.classList.add("d-none");
+						totalDiv.classList.add("d-none");
+
 					}
 				}
 
@@ -485,7 +545,27 @@ class VentaList extends EntityLocalData {
 	}
 
 	configAddProduct() {
+		const btn_addProduct = document.getElementById("btn_addProduct") as HTMLButtonElement;
+		const cantidadInput = document.getElementById("num_cantidad") as HTMLInputElement;
+		const productoInput = document.getElementById("select_productos") as HTMLSelectElement;
+		const productosData: Array<Producto> = new ProductoList().getData();
+		const outputProducto = document.querySelector(".product-wrapper") as HTMLDivElement;
+		const cantidadProducto = document.querySelector(".quantity-wrapper") as HTMLDivElement;
+		const divOutputProducto = document.createElement("div");
+		const divOutputCantidad = document.createElement("div");
 
+		btn_addProduct.onclick = () => {
+			productosData.forEach((productoData) => {
+				if (productoData.id == parseInt(productoInput.value)) {
+					divOutputProducto.innerHTML = `${productoData.id} ${productoData.familia} ${productoData.precio}`;
+					divOutputCantidad.innerHTML = `${cantidadInput.value}`;
+					outputProducto.appendChild(divOutputProducto);
+					cantidadProducto.appendChild(divOutputCantidad);
+				}
+
+			})
+			console.log(cantidadInput.value);
+		};
 	}
 
 }

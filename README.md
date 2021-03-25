@@ -1,14 +1,25 @@
 # TiendaFinal
 
-## Fallo 1(ID Duplicado):
+## Tecnologias
 
-     Solo pasa Clientes
-     Se reinicia
+- FramaWork CSS: Boostrap
+- Superset CSS: Scss
+- Superset Js: Typescript
 
-## Fallo 2(No corresponcendia vista/logica):
+## Fallos
 
-Dado el que no se actualiza la vista, si creas 2 elementos seguidos, en la vista se ven, pues tengo un metodo que inserta la fila al crearla, pero en la logica, machaca el anterior valor.
+### Fallo 1(Filtrado de datos):
 
-## Fallo 3(Solo ultimo elemento interactuable):
+     En productos solo hay duda en descripcion, pero en cliente no que filtros poner, conozco que hay una formula para el dni, pero en el resto que pongo?
 
-De hecho en cliente es el primero y en producto es el ultimo
+### Fallo 2(Table cliente width):
+
+     Fallo nimio y sin importancia para la asignatura, pero deberia revisar el HTML y CSS
+
+### Fallo 3(Asignacion eventos btn registros):
+
+     Solo se le asigna las funciones al ultimo registro
+
+### Fallo 4(Asignacion eventos btn registros):
+
+     Solo se le asigna las funciones al primer o ultimo registro

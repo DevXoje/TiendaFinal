@@ -1,1 +1,31 @@
-[{"id":1,"nombre":"Jose","apellidos":"Vilches","dni":"123456789P","fecha_nac":"1990-12-12","email":"dawxoje@gmail.com","password":"1234"},{"id":2,"nombre":"Juan","apellidos":"Bahia","dni":"987654321J","fecha_nac":"1994-12-12","email":"dawxoje@gmail.com","password":"1234"},{"id":3,"nombre":"Lorena","apellidos":"Vizcaino","dni":"4567890P","fecha_nac":"1900-12-12","email":"dawxoje@gmail.com","password":"1234"}]
+[{
+        "id": 1,
+        "nombre": "Jose",
+        "apellidos": "Vilches",
+        "dni": "123456789P",
+        "fecha_nac": "1990-12-12",
+        "email": "dawxoje@gmail.com",
+        "password": "1234",
+        "isBorrado": false
+    },
+    {
+        "id": 2,
+        "nombre": "Juan",
+        "apellidos": "Bahia",
+        "dni": "987654321J",
+        "fecha_nac": "1994-12-12",
+        "email": "dawxoje@gmail.com",
+        "password": "1234",
+        "isBorrado": false
+    },
+    {
+        "id": 3,
+        "nombre": "Lorena",
+        "apellidos": "Vizcaino",
+        "dni": "4567890P",
+        "fecha_nac": "1900-12-12",
+        "email": "dawxoje@gmail.com",
+        "password": "1234",
+        "isBorrado": false
+    }
+]

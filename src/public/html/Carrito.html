@@ -36,13 +36,13 @@
     <button type="button" name="btn_empezar" id="btn_empezar" class="btn btn-primary btn-lg btn-block">NUEVO
         CARRITO</button>
     <form class="form card p-5 d-none">
-        <div class="form-group mb-3 d-none">
+        <div class="form-group mb-3 d-none client-wrapper">
             <label for="select_cliente" class="form-label">Cliente</label>
             <select name="select_cliente" id="select_cliente" class="form-control" required>
                 <option value="none">NONE</option>
             </select>
         </div>
-        <div class="form-group mb-3 row d-none">
+        <div class="form-group mb-3 row d-none product-wrapper">
             <div class="form-group col-9">
                 <label for="select_productos" class="form-label">Producto</label>
                 <select class="form-select" name="select_productos" id="select_productos" required>
@@ -51,15 +51,14 @@
             </div>
             <div class="form-group col-3 d-none">
                 <label for="num_cantidad" class="form-label">Cantidad</label>
-                <input type="number" name="num_cantidad" id="num_cantidad" class="form-control" min="0" step="1" required>
+                <input type="number" name="num_cantidad" id="num_cantidad" class="form-control" min="0" step="1" value="1" required>
                 <button type="button" name="btn_addProduct" id="btn_addProduct" class="btn btn-success">ADD</button>
-
             </div>
         </div>
-        <div class="form-group mb-3 d-none">
+        <div class="form-group mb-3 d-none quantity-wrapper">
             <label for="num_stock" class="form-label">Coste Total</label>
-            <input type="number" class="form-control" id="num_stock" name="num_stock" min="1" step="1" required>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <input type="number" class="form-control" id="num_stock" name="num_stock" min="1" step="1" disabled>
+            <button type="submit" class="btn btn-primary" disabled>Submit</button>
 
         </div>
     </form>

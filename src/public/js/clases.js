@@ -12,10 +12,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+/**
+ * Controla la logica comun de los 3 apartados, la conexion con el archivo fisico(almacenar), conexion con formulario(Crear-Editar) y con una tabla(Ver)
+ */
 var EntityLocalData = /** @class */ (function () {
+    /**
+     * Se establecen las conexiones de los contenedores HTML
+     * @param nameFile nombre del archivo con informacion
+     * @param logicFile nombre del archivo con la logica de conexion
+     */
     function EntityLocalData(nameFile, logicFile) {
-        this.nameFile = "";
-        this.logicFile = "";
         this.form = document.querySelector(".form");
         this.formElements = new Array();
         for (var i = 0; i < this.form.elements.length; i++) {
@@ -28,6 +34,10 @@ var EntityLocalData = /** @class */ (function () {
         this.nameFile = nameFile;
         this.logicFile = logicFile;
     }
+    /**
+     * Conecta con el archico fisico de forma sincrona
+     * @returns Array con la informacion en formato JSON
+     */
     EntityLocalData.prototype.getData = function () {
         var output = new Array();
         var ajax = new XMLHttpRequest();
@@ -44,6 +54,10 @@ var EntityLocalData = /** @class */ (function () {
         ajax.send(null);
         return output;
     };
+    /**
+     * Evento que cambiara el valor del variable isBorrrado el registro de tabla
+     * @param e  Evento del botton borrar
+     */
     EntityLocalData.prototype.removeData = function (e) {
         var btn_remove = e.target;
         var celda = btn_remove.parentElement;
@@ -53,19 +67,25 @@ var EntityLocalData = /** @class */ (function () {
         this.removeFromID(id);
         fila.remove();
     };
+    /**
+     * Conecta con el archico fisico de forma asincrona, mediante la id cambia el valor de isBorrado del registro
+     * @param id string que identifica a los registros
+     */
     EntityLocalData.prototype.removeFromID = function (id) {
         var ajax = new XMLHttpRequest();
         var data = this.getData();
         var output = new Array();
-        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-            var dato = data_1[_i];
-            if (dato.id != id) {
-                output.push(dato);
-            }
-        }
+        data.forEach(function (dato) {
+            dato.isBorrado = dato.id == id;
+            output.push(dato);
+        });
         ajax.open("POST", "./../../php/" + this.logicFile + ".php?param=" + JSON.stringify(output), true);
         ajax.send();
     };
+    /**
+     * Evento que editara el registro de tabla
+     * @param e Evento del botton editar
+     */
     EntityLocalData.prototype.editData = function (e) {
         var btn_edit = e.target;
         var celda = btn_edit.parentElement;
@@ -73,14 +93,15 @@ var EntityLocalData = /** @class */ (function () {
         var idCelda = fila.querySelector("td");
         var data = this.getData();
         var toEdit;
-        for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
-            var dato = data_2[_i];
-            (dato.id == idCelda.textContent) ? toEdit = dato : null;
-        }
+        data.forEach(function (dato) { return (dato.id == idCelda.textContent) ? toEdit = dato : null; });
         fila.classList.add("select");
         this.setDataOnForm(toEdit);
         this.configBtnOnEdit(celda);
     };
+    /**
+     * Quita todos los botones de la tabla y deja un boton para cancelar el modo edicion
+     * @param celdaBtn Celda donde esta el botton editar y donde estara el de cancelar
+     */
     EntityLocalData.prototype.configBtnOnEdit = function (celdaBtn) {
         var _this = this;
         var btns = this.table.querySelectorAll("button");
@@ -89,32 +110,51 @@ var EntityLocalData = /** @class */ (function () {
         btn_cancelEdit.className = "btn btn-danger";
         btn_cancelEdit.onclick = function () { return _this.endEdit(); };
         btn_cancelEdit.textContent = "CANCELAR";
-        btns.forEach(function (btn) {
-            btn.style.display = "none";
-        });
+        btns.forEach(function (btn) { return btn.style.display = "none"; });
         celdaBtn.appendChild(btn_cancelEdit);
     };
+    /**
+     * Restaura los botones ocultados y elimina el boton de cancelar
+     */
     EntityLocalData.prototype.endEdit = function () {
         this.form.reset();
         var elements = document.querySelectorAll(".select");
         var btns = this.table.querySelectorAll("button");
-        elements.forEach(function (element) {
-            element.classList.remove("select");
-        });
-        btns.forEach(function (btn) {
-            (btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove();
-        });
+        elements.forEach(function (element) { return element.classList.remove("select"); });
+        btns.forEach(function (btn) { return (btn.style.display == "none") ? btn.style.display = "inline-block" : btn.remove(); });
     };
+    EntityLocalData.prototype.checkInEdit = function () {
+        if (this.form.classList.contains("select")) {
+            var filaSelect = this.table.querySelector(".select");
+            var idCelda = filaSelect.querySelector("td");
+            var id_1 = idCelda.textContent;
+            var ajax = new XMLHttpRequest();
+            var data = this.getData();
+            var output_1 = new Array();
+            data.forEach(function (dato) {
+                if (dato.id != id_1)
+                    output_1.push(dato);
+            });
+            ajax.open("POST", "./../../php/" + this.logicFile + ".php?param=" + JSON.stringify(output_1), true);
+            ajax.send();
+            this.form.classList.remove("select");
+            filaSelect.classList.remove("select");
+            this.endEdit();
+        }
+    };
+    /**
+     * Prepara la logica para captura los datos del formulario y añadirlos al documento fisico
+     */
     EntityLocalData.prototype.configSubmit = function () {
         var _this = this;
         this.form.addEventListener("submit", function (e) {
             var ajax = new XMLHttpRequest();
             var dataTotal = _this.getData();
+            _this.checkInEdit();
             var newData = _this.selectDataOfTable();
             dataTotal.push(newData);
             ajax.open("POST", "./../../php/" + _this.logicFile + ".php?param=" + JSON.stringify(dataTotal), true);
             ajax.send();
-            _this.addRowOnTable(newData);
             _this.form.reset();
             e.preventDefault();
         });
@@ -143,22 +183,26 @@ var EntityLocalData = /** @class */ (function () {
         return controls;
     };
     EntityLocalData.prototype.printDataOnTable = function () {
+        var _this = this;
         var data = this.getData();
-        for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
-            var producto = data_3[_i];
-            this.addRowOnTable(producto);
-        }
+        data.forEach(function (dato) {
+            if (!dato.isBorrado) {
+                _this.addRowOnTable(dato);
+            }
+        });
     };
     ;
     return EntityLocalData;
 }());
 var Producto = /** @class */ (function () {
-    function Producto(descripcion, familia, precio, stock) {
+    function Producto(descripcion, familia, precio, stock, isBorrado) {
+        if (isBorrado === void 0) { isBorrado = false; }
         this.id = ++Producto.nextId;
         this.descripcion = descripcion;
         this.familia = familia;
         this.precio = precio;
         this.stock = stock;
+        this.isBorrado = isBorrado;
     }
     Producto.nextId = 0;
     return Producto;
@@ -174,7 +218,8 @@ var ProductoVendido = /** @class */ (function (_super) {
     return ProductoVendido;
 }(Producto));
 var Cliente = /** @class */ (function () {
-    function Cliente(nombre, apellidos, dni, fecha_nac, email, password) {
+    function Cliente(nombre, apellidos, dni, fecha_nac, email, password, isBorrado) {
+        if (isBorrado === void 0) { isBorrado = false; }
         this.id = ++Producto.nextId;
         this.nombre = nombre;
         this.apellidos = apellidos;
@@ -182,15 +227,17 @@ var Cliente = /** @class */ (function () {
         this.fecha_nac = fecha_nac;
         this.email = email;
         this.password = password;
+        this.isBorrado = isBorrado;
     }
     Cliente.nextId = 0;
     return Cliente;
 }());
 var Venta = /** @class */ (function () {
-    function Venta(cliente) {
+    function Venta(cliente, isBorrado) {
         this.id = ++Venta.nextId;
         this.cliente = cliente;
         this.productos = new Array();
+        this.isBorrado = isBorrado;
     }
     Venta.prototype.addProducto = function (newProducto, cantidad) {
         this.productos.push(new ProductoVendido(newProducto, cantidad));
@@ -218,6 +265,7 @@ var ProductoList = /** @class */ (function (_super) {
             num_stock: Number(formData.get('num_stock'))
         };
         var producto = new Producto(productoBruto.txt_descripcion, productoBruto.select_familia, productoBruto.num_precio, productoBruto.num_stock);
+        console.log(producto);
         if (this.form.classList.contains("select")) {
             var filaSelect = this.table.querySelector(".select");
             var idCelda = filaSelect.querySelector("td");
@@ -408,9 +456,12 @@ var VentaList = /** @class */ (function (_super) {
                 inputProducto.onchange = function () {
                     if (inputProducto.value != "none") {
                         cantidadDiv.classList.remove("d-none");
+                        totalDiv.classList.remove("d-none");
+                        _this.configAddProduct();
                     }
                     else {
                         cantidadDiv.classList.add("d-none");
+                        totalDiv.classList.add("d-none");
                     }
                 };
             }
@@ -431,6 +482,25 @@ var VentaList = /** @class */ (function (_super) {
         }
     };
     VentaList.prototype.configAddProduct = function () {
+        var btn_addProduct = document.getElementById("btn_addProduct");
+        var cantidadInput = document.getElementById("num_cantidad");
+        var productoInput = document.getElementById("select_productos");
+        var productosData = new ProductoList().getData();
+        var outputProducto = document.querySelector(".product-wrapper");
+        var cantidadProducto = document.querySelector(".quantity-wrapper");
+        var divOutputProducto = document.createElement("div");
+        var divOutputCantidad = document.createElement("div");
+        btn_addProduct.onclick = function () {
+            productosData.forEach(function (productoData) {
+                if (productoData.id == parseInt(productoInput.value)) {
+                    divOutputProducto.innerHTML = productoData.id + " " + productoData.familia + " " + productoData.precio;
+                    divOutputCantidad.innerHTML = "" + cantidadInput.value;
+                    outputProducto.appendChild(divOutputProducto);
+                    cantidadProducto.appendChild(divOutputCantidad);
+                }
+            });
+            console.log(cantidadInput.value);
+        };
     };
     return VentaList;
 }(EntityLocalData));
